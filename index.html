@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,14 +38,14 @@
     </style>
 </head>
 <body>
- 
+    
     <div id="map"></div>
 
     <script>
         // Inicializar o mapa
         const map = L.map('map').setView([-15.7801, -47.9292], 4); // Centro do Brasil
 
-        // Adicionar tiles (fundo do mapa)
+        
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
@@ -100,7 +100,7 @@
             // Adicionar o grupo de marcadores ao mapa
             map.addLayer(markers);
 
-            // Exibir a contagem de pontos do DF e pontos inválidos
+            // Exibir a contagem de pontos do DF e pontos inválidos no console
             let message = `Total de pontos do DF encontrados no JSON: ${dfCount}\n`;
             if (invalidPoints.length > 0) {
                 message += `Pontos com coordenadas inválidas:\n`;
@@ -110,7 +110,7 @@
             } else {
                 message += `Nenhum ponto com coordenadas inválidas encontrado.`;
             }
-            alert(message);
+            console.log(message); 
         }
 
         // Carregar os dados do arquivo JSON assim que a página abrir
@@ -123,7 +123,7 @@
                 })
                 .catch(error => {
                     console.error('Erro ao carregar os dados:', error);
-                    alert('Não foi possível carregar os dados. Verifique se o arquivo dados.json está no mesmo diretório que o mapaPB_2.html.');
+                    alert('Não foi possível carregar os dados. Verifique se o arquivo dados_1.json está no mesmo diretório que o index.html.');
                 });
         };
     </script>
