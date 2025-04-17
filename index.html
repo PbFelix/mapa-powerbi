@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,14 +38,15 @@
     </style>
 </head>
 <body>
-    
+    <h2>Mapa com 6.500 Pontos Pré-carregados</h2>
+    <p>Os dados foram carregados do arquivo JSON (dados_1.json) gerado a partir da planilha.</p>
     <div id="map"></div>
 
     <script>
         // Inicializar o mapa
         const map = L.map('map').setView([-15.7801, -47.9292], 4); // Centro do Brasil
 
-        
+        // Adicionar tiles (fundo do mapa)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
@@ -55,18 +56,11 @@
 
         // Função para adicionar marcadores com base nos dados
         function addMarkers(data) {
-            let dfCount = 0; // Contador para pontos do DF
-            let invalidPoints = []; // Para armazenar pontos inválidos
-
             data.forEach(row => {
                 const lat = parseFloat(row.Latitude);
                 const lon = parseFloat(row.Longitude);
                 const uf = row.UF;
-                const indice = row.Indice !== undefined ? row.Indice : 'N/A'; // Ajustado para "Indice"
-
-                if (uf === 'DF') {
-                    dfCount++; // Incrementar contador para cada ponto do DF
-                }
+                const indice = row.Indice !== undefined ? row.Indice : 'N/A';
 
                 if (!isNaN(lat) && !isNaN(lon)) {
                     const marker = L.circleMarker([lat, lon], {
@@ -91,26 +85,11 @@
                     
                     // Adicionar o marcador ao grupo de clustering
                     markers.addLayer(marker);
-                } else {
-                    // Armazenar pontos com latitude ou longitude inválidas
-                    invalidPoints.push({ uf: uf, lat: row.Latitude, lon: row.Longitude });
                 }
             });
 
             // Adicionar o grupo de marcadores ao mapa
             map.addLayer(markers);
-
-            // Exibir a contagem de pontos do DF e pontos inválidos no console
-            let message = `Total de pontos do DF encontrados no JSON: ${dfCount}\n`;
-            if (invalidPoints.length > 0) {
-                message += `Pontos com coordenadas inválidas:\n`;
-                invalidPoints.forEach(point => {
-                    message += `UF: ${point.uf}, Latitude: ${point.lat}, Longitude: ${point.lon}\n`;
-                });
-            } else {
-                message += `Nenhum ponto com coordenadas inválidas encontrado.`;
-            }
-            console.log(message); 
         }
 
         // Carregar os dados do arquivo JSON assim que a página abrir
