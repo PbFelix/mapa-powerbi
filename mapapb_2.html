@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Sugestão "Manter"</title>
+    <!-- Incluindo a biblioteca Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Incluindo a biblioteca Leaflet.markercluster para clustering -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <style>
+        #map {
+            height: 80vh;
+            width: 100%;
+        }
+        .leaflet-container {
+            background: #e6f0fa; /* Cor de fundo */
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .popup-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .popup-table td, .popup-table th {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+        .popup-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+ 
+    <div id="map"></div>
+
+    <script>
+        // Inicializar o mapa
+        const map = L.map('map').setView([-15.7801, -47.9292], 4); // Centro do Brasil
+
+        // Adicionar tiles (fundo do mapa)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Criar um grupo de marcadores com clustering
+        const markers = L.markerClusterGroup();
+
+        // Função para adicionar marcadores com base nos dados
+        function addMarkers(data) {
+            let dfCount = 0; // Contador para pontos do DF
+            let invalidPoints = []; // Para armazenar pontos inválidos
+
+            data.forEach(row => {
+                const lat = parseFloat(row.Latitude);
+                const lon = parseFloat(row.Longitude);
+                const uf = row.UF;
+                const indice = row.Indice !== undefined ? row.Indice : 'N/A'; // Ajustado para "Indice"
+
+                if (uf === 'DF') {
+                    dfCount++; // Incrementar contador para cada ponto do DF
+                }
+
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    const marker = L.circleMarker([lat, lon], {
+                        radius: 8,
+                        fillColor: "#1a3c63",
+                        color: "#1a3c63",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+
+                    // Popup com informações em formato de tabela
+                    const popupContent = `
+                        <table class="popup-table">
+                            <tr><th>Estado</th><td>${uf}</td></tr>
+                            <tr><th>Índice</th><td>${indice}</td></tr>
+                            <tr><th>Latitude</th><td>${lat.toFixed(6)}</td></tr>
+                            <tr><th>Longitude</th><td>${lon.toFixed(6)}</td></tr>
+                        </table>
+                    `;
+                    marker.bindPopup(popupContent);
+                    
+                    // Adicionar o marcador ao grupo de clustering
+                    markers.addLayer(marker);
+                } else {
+                    // Armazenar pontos com latitude ou longitude inválidas
+                    invalidPoints.push({ uf: uf, lat: row.Latitude, lon: row.Longitude });
+                }
+            });
+
+            // Adicionar o grupo de marcadores ao mapa
+            map.addLayer(markers);
+
+            // Exibir a contagem de pontos do DF e pontos inválidos
+            let message = `Total de pontos do DF encontrados no JSON: ${dfCount}\n`;
+            if (invalidPoints.length > 0) {
+                message += `Pontos com coordenadas inválidas:\n`;
+                invalidPoints.forEach(point => {
+                    message += `UF: ${point.uf}, Latitude: ${point.lat}, Longitude: ${point.lon}\n`;
+                });
+            } else {
+                message += `Nenhum ponto com coordenadas inválidas encontrado.`;
+            }
+            alert(message);
+        }
+
+        // Carregar os dados do arquivo JSON assim que a página abrir
+        window.onload = function() {
+            fetch('dados_1.json')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(`Carregados ${data.length} pontos.`);
+                    addMarkers(data);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar os dados:', error);
+                    alert('Não foi possível carregar os dados. Verifique se o arquivo dados.json está no mesmo diretório que o mapaPB_2.html.');
+                });
+        };
+    </script>
+</body>
+</html>
