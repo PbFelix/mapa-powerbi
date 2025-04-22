@@ -61,8 +61,9 @@
         const markers = L.markerClusterGroup();
 
         // Função para adicionar marcadores com base nos dados
-        function addMarkers(data) {
+        function addMarkers(data, ufSelecionado) {
             const bounds = L.latLngBounds(); // Para calcular os limites dos pontos
+            let markerCount = 0; // Para depurar a quantidade de marcadores adicionados
 
             data.forEach(row => {
                 const lat = parseFloat(row.Latitude);
@@ -93,20 +94,25 @@
                     
                     // Adicionar o marcador ao grupo de clustering
                     markers.addLayer(marker);
+                    markerCount++;
 
-                    // Adicionar as coordenadas aos limites
-                    bounds.extend([lat, lon]);
+                    // Adicionar as coordenadas aos limites (apenas se uma UF estiver selecionada)
+                    if (ufSelecionado) {
+                        bounds.extend([lat, lon]);
+                    }
                 }
             });
+
+            console.log(`Adicionados ${markerCount} marcadores.`);
 
             // Adicionar o grupo de marcadores ao mapa
             map.addLayer(markers);
 
-            // Ajustar o zoom para englobar todos os pontos filtrados
-            if (bounds.isValid()) {
+            // Ajustar o zoom: apenas se uma UF estiver selecionada e houver pontos válidos
+            if (ufSelecionado && bounds.isValid()) {
                 map.fitBounds(bounds, { padding: [50, 50] });
             } else {
-                // Se não houver pontos válidos, manter o zoom padrão
+                // Se nenhuma UF estiver selecionada, manter o zoom padrão (centro do Brasil)
                 map.setView([-15.7801, -47.9292], 4);
             }
         }
@@ -116,8 +122,15 @@
             const ufSelecionado = getUFfromURL();
 
             fetch('dados_1.json')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar dados_1.json');
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log(`Dados carregados: ${data.length} pontos no total.`);
+
                     let dadosFiltrados = data;
 
                     if (ufSelecionado) {
@@ -127,7 +140,7 @@
                         console.log(`Sem UF definida na URL. Exibindo todos os ${data.length} pontos.`);
                     }
 
-                    addMarkers(dadosFiltrados);
+                    addMarkers(dadosFiltrados, ufSelecionado);
                 })
                 .catch(error => {
                     console.error('Erro ao carregar os dados:', error);
