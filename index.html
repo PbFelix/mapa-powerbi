@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="ALLOWALL"> <!-- Permite iframes -->
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors *"> <!-- Permite que o conteúdo seja incorporado -->
     <title>Mapa Sugestão "Manter"</title>
     <!-- Incluindo a biblioteca Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -38,14 +40,14 @@
     </style>
 </head>
 <body>
-   
+  
     <div id="map"></div>
 
     <script>
         // Inicializar o mapa
         const map = L.map('map').setView([-15.7801, -47.9292], 4); // Centro do Brasil
 
-        // Adicionar tiles 
+        // Adicionar tiles (fundo do mapa)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
@@ -72,14 +74,14 @@
                     });
 
                     // Popup com informações em formato de tabela
-                    const popupContent = 
+                    const popupContent = `
                         <table class="popup-table">
                             <tr><th>Estado</th><td>${uf}</td></tr>
                             <tr><th>Índice</th><td>${indice}</td></tr>
                             <tr><th>Latitude</th><td>${lat.toFixed(6)}</td></tr>
                             <tr><th>Longitude</th><td>${lon.toFixed(6)}</td></tr>
                         </table>
-                    ;
+                    `;
                     marker.bindPopup(popupContent);
                     
                     // Adicionar o marcador ao grupo de clustering
@@ -96,7 +98,7 @@
             fetch('dados_1.json')
                 .then(response => response.json())
                 .then(data => {
-                    console.log(Carregados ${data.length} pontos.);
+                    console.log(`Carregados ${data.length} pontos.`);
                     addMarkers(data);
                 })
                 .catch(error => {
