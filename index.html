@@ -46,8 +46,7 @@
         // Função para obter o parâmetro 'uf' da URL
         function getUFfromURL() {
             const params = new URLSearchParams(window.location.search);
-            const uf = params.get('uf');
-            return uf && uf.trim() !== '' ? uf.toUpperCase() : null;
+            return params.get('uf')?.toUpperCase() || null;
         }
 
         // Inicializar o mapa
@@ -63,6 +62,8 @@
 
         // Função para adicionar marcadores com base nos dados
         function addMarkers(data) {
+            const bounds = L.latLngBounds(); // Para calcular os limites dos pontos
+
             data.forEach(row => {
                 const lat = parseFloat(row.Latitude);
                 const lon = parseFloat(row.Longitude);
@@ -92,11 +93,22 @@
                     
                     // Adicionar o marcador ao grupo de clustering
                     markers.addLayer(marker);
+
+                    // Adicionar as coordenadas aos limites
+                    bounds.extend([lat, lon]);
                 }
             });
 
             // Adicionar o grupo de marcadores ao mapa
             map.addLayer(markers);
+
+            // Ajustar o zoom para englobar todos os pontos filtrados
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            } else {
+                // Se não houver pontos válidos, manter o zoom padrão
+                map.setView([-15.7801, -47.9292], 4);
+            }
         }
 
         // Carregar os dados do JSON e filtrar por UF (se existir)
@@ -116,16 +128,6 @@
                     }
 
                     addMarkers(dadosFiltrados);
-
-                    // Centralizar mapa se houver pontos da UF
-                    if (dadosFiltrados.length > 0) {
-                        const primeiro = dadosFiltrados[0];
-                        const lat = parseFloat(primeiro.Latitude);
-                        const lon = parseFloat(primeiro.Longitude);
-                        if (!isNaN(lat) && !isNaN(lon)) {
-                            map.setView([lat, lon], 6); // Foco na UF
-                        }
-                    }
                 })
                 .catch(error => {
                     console.error('Erro ao carregar os dados:', error);
