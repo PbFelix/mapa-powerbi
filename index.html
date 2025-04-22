@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="ALLOWALL">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
     <title>Mapa Sugestão "Manter"</title>
     <!-- Incluindo a biblioteca Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -38,10 +40,16 @@
     </style>
 </head>
 <body>
-   
     <div id="map"></div>
 
     <script>
+        // Função para obter o parâmetro 'uf' da URL
+        function getUFfromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const uf = params.get('uf');
+            return uf && uf.trim() !== '' ? uf.toUpperCase() : null;
+        }
+
         // Inicializar o mapa
         const map = L.map('map').setView([-15.7801, -47.9292], 4); // Centro do Brasil
 
@@ -91,13 +99,33 @@
             map.addLayer(markers);
         }
 
-        // Carregar os dados do arquivo JSON assim que a página abrir
-        window.onload = function() {
+        // Carregar os dados do JSON e filtrar por UF (se existir)
+        window.onload = function () {
+            const ufSelecionado = getUFfromURL();
+
             fetch('dados_1.json')
                 .then(response => response.json())
                 .then(data => {
-                    console.log(`Carregados ${data.length} pontos.`);
-                    addMarkers(data);
+                    let dadosFiltrados = data;
+
+                    if (ufSelecionado) {
+                        dadosFiltrados = data.filter(row => row.UF?.toUpperCase() === ufSelecionado);
+                        console.log(`Filtrando UF: ${ufSelecionado} (${dadosFiltrados.length} pontos)`);
+                    } else {
+                        console.log(`Sem UF definida na URL. Exibindo todos os ${data.length} pontos.`);
+                    }
+
+                    addMarkers(dadosFiltrados);
+
+                    // Centralizar mapa se houver pontos da UF
+                    if (dadosFiltrados.length > 0) {
+                        const primeiro = dadosFiltrados[0];
+                        const lat = parseFloat(primeiro.Latitude);
+                        const lon = parseFloat(primeiro.Longitude);
+                        if (!isNaN(lat) && !isNaN(lon)) {
+                            map.setView([lat, lon], 6); // Foco na UF
+                        }
+                    }
                 })
                 .catch(error => {
                     console.error('Erro ao carregar os dados:', error);
