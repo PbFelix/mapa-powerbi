@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-Frame-Options" content="ALLOWALL"> <!-- Permite iframes -->
-    <meta http-equiv="Content-Security-Policy" content="frame-ancestors *"> <!-- Permite que o conteúdo seja incorporado -->
+    <meta http-equiv="X-Frame-Options" content="ALLOWALL">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
     <title>Mapa Sugestão "Manter"</title>
     <!-- Incluindo a biblioteca Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -40,10 +40,15 @@
     </style>
 </head>
 <body>
-  
     <div id="map"></div>
 
     <script>
+        // Função para obter o parâmetro 'uf' da URL
+        function getUFfromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('uf')?.toUpperCase() || null;
+        }
+
         // Inicializar o mapa
         const map = L.map('map').setView([-15.7801, -47.9292], 4); // Centro do Brasil
 
@@ -56,7 +61,9 @@
         const markers = L.markerClusterGroup();
 
         // Função para adicionar marcadores com base nos dados
-        function addMarkers(data) {
+        function addMarkers(data, ufSelecionado) {
+            const bounds = L.latLngBounds(); // Para calcular os limites dos pontos
+
             data.forEach(row => {
                 const lat = parseFloat(row.Latitude);
                 const lon = parseFloat(row.Longitude);
@@ -86,20 +93,50 @@
                     
                     // Adicionar o marcador ao grupo de clustering
                     markers.addLayer(marker);
+
+                    // Adicionar as coordenadas aos limites (apenas se uma UF estiver selecionada)
+                    if (ufSelecionado) {
+                        bounds.extend([lat, lon]);
+                    }
                 }
             });
 
             // Adicionar o grupo de marcadores ao mapa
             map.addLayer(markers);
+
+            // Ajustar o zoom: apenas se uma UF estiver selecionada e houver pontos válidos
+            if (ufSelecionado && bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            } else {
+                // Se nenhuma UF estiver selecionada, manter o zoom padrão (centro do Brasil)
+                map.setView([-15.7801, -47.9292], 4);
+            }
         }
 
-        // Carregar os dados do arquivo JSON assim que a página abrir
-        window.onload = function() {
+        // Carregar os dados do JSON e filtrar por UF (se existir)
+        window.onload = function () {
+            const ufSelecionado = getUFfromURL();
+
             fetch('dados_1.json')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar dados_1.json');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    console.log(`Carregados ${data.length} pontos.`);
-                    addMarkers(data);
+                    console.log(`Dados carregados: ${data.length} pontos no total.`);
+
+                    let dadosFiltrados = data;
+
+                    if (ufSelecionado) {
+                        dadosFiltrados = data.filter(row => row.UF?.toUpperCase() === ufSelecionado);
+                        console.log(`Filtrando UF: ${ufSelecionado} (${dadosFiltrados.length} pontos)`);
+                    } else {
+                        console.log(`Sem UF definida na URL. Exibindo todos os ${data.length} pontos.`);
+                    }
+
+                    addMarkers(dadosFiltrados, ufSelecionado);
                 })
                 .catch(error => {
                     console.error('Erro ao carregar os dados:', error);
