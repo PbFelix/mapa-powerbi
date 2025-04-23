@@ -1,148 +1,151 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-Frame-Options" content="ALLOWALL">
-    <meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
-    <title>Mapa Sugestão "Manter"</title>
-    <!-- Incluindo a biblioteca Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Incluindo a biblioteca Leaflet.markercluster para clustering -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    <style>
-        #map {
-            height: 80vh;
-            width: 100%;
-        }
-        .leaflet-container {
-            background: #e6f0fa; /* Cor de fundo */
-        }
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .popup-table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        .popup-table td, .popup-table th {
-            border: 1px solid #ddd;
-            padding: 4px;
-            text-align: left;
-        }
-        .popup-table th {
-            background-color: #f2f2f2;
-        }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
+   <html lang="pt-BR">
+   <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <meta http-equiv="X-Frame-Options" content="ALLOWALL">
+       <meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+       <title>Mapa Sugestão "Manter"</title>
+       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+       <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+       <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+       <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+       <style>
+           #map {
+               height: 80vh;
+               width: 100%;
+           }
+           .leaflet-container {
+               background: #e6f0fa;
+           }
+           body {
+               font-family: Arial, sans-serif;
+               margin: 20px;
+           }
+           .popup-table {
+               border-collapse: collapse;
+               width: 100%;
+           }
+           .popup-table td, .popup-table th {
+               border: 1px solid #ddd;
+               padding: 4px;
+               text-align: left;
+           }
+           .popup-table th {
+               background-color: #f2f2f2;
+           }
+       </style>
+   </head>
+   <body>
+       <div id="map"></div>
 
-    <script>
-        // Função para obter o parâmetro 'uf' da URL
-        function getUFfromURL() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('uf')?.toUpperCase() || null;
-        }
+       <script>
+           // Função para obter os parâmetros da URL
+           function getParameterFromURL(param) {
+               const params = new URLSearchParams(window.location.search);
+               return params.get(param) || null;
+           }
 
-        // Inicializar o mapa
-        const map = L.map('map').setView([-15.7801, -47.9292], 4); // Centro do Brasil
+           // Inicializar o mapa
+           const map = L.map('map').setView([-15.7801, -47.9292], 4);
 
-        // Adicionar tiles (fundo do mapa)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+               attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+           }).addTo(map);
 
-        // Criar um grupo de marcadores com clustering
-        const markers = L.markerClusterGroup();
+           const markers = L.markerClusterGroup();
 
-        // Função para adicionar marcadores com base nos dados
-        function addMarkers(data, ufSelecionado) {
-            const bounds = L.latLngBounds(); // Para calcular os limites dos pontos
+           function addMarkers(data, hasFilter) {
+               const bounds = L.latLngBounds();
 
-            data.forEach(row => {
-                const lat = parseFloat(row.Latitude);
-                const lon = parseFloat(row.Longitude);
-                const uf = row.UF;
-                const indice = row.Indice !== undefined ? row.Indice : 'N/A';
+               data.forEach(row => {
+                   const lat = parseFloat(row.Latitude);
+                   const lon = parseFloat(row.Longitude);
+                   const uf = row.UF;
+                   const indice = row.Indice !== undefined ? row.Indice : 'N/A';
 
-                if (!isNaN(lat) && !isNaN(lon)) {
-                    const marker = L.circleMarker([lat, lon], {
-                        radius: 8,
-                        fillColor: "#1a3c63",
-                        color: "#1a3c63",
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    });
+                   if (!isNaN(lat) && !isNaN(lon)) {
+                       const marker = L.circleMarker([lat, lon], {
+                           radius: 8,
+                           fillColor: "#1a3c63",
+                           color: "#1a3c63",
+                           weight: 1,
+                           opacity: 1,
+                           fillOpacity: 0.8
+                       });
 
-                    // Popup com informações em formato de tabela
-                    const popupContent = `
-                        <table class="popup-table">
-                            <tr><th>Estado</th><td>${uf}</td></tr>
-                            <tr><th>Índice</th><td>${indice}</td></tr>
-                            <tr><th>Latitude</th><td>${lat.toFixed(6)}</td></tr>
-                            <tr><th>Longitude</th><td>${lon.toFixed(6)}</td></tr>
-                        </table>
-                    `;
-                    marker.bindPopup(popupContent);
-                    
-                    // Adicionar o marcador ao grupo de clustering
-                    markers.addLayer(marker);
+                       const popupContent = `
+                           <table class="popup-table">
+                               <tr><th>Estado</th><td>${uf}</td></tr>
+                               <tr><th>Índice</th><td>${indice}</td></tr>
+                               <tr><th>Latitude</th><td>${lat.toFixed(6)}</td></tr>
+                               <tr><th>Longitude</th><td>${lon.toFixed(6)}</td></tr>
+                           </table>
+                       `;
+                       marker.bindPopup(popupContent);
+                       
+                       markers.addLayer(marker);
 
-                    // Adicionar as coordenadas aos limites (apenas se uma UF estiver selecionada)
-                    if (ufSelecionado) {
-                        bounds.extend([lat, lon]);
-                    }
-                }
-            });
+                       if (hasFilter) {
+                           bounds.extend([lat, lon]);
+                       }
+                   }
+               });
 
-            // Adicionar o grupo de marcadores ao mapa
-            map.addLayer(markers);
+               map.addLayer(markers);
 
-            // Ajustar o zoom: apenas se uma UF estiver selecionada e houver pontos válidos
-            if (ufSelecionado && bounds.isValid()) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            } else {
-                // Se nenhuma UF estiver selecionada, manter o zoom padrão (centro do Brasil)
-                map.setView([-15.7801, -47.9292], 4);
-            }
-        }
+               if (hasFilter && bounds.isValid()) {
+                   map.fitBounds(bounds, { padding: [50, 50] });
+               } else {
+                   map.setView([-15.7801, -47.9292], 4);
+               }
+           }
 
-        // Carregar os dados do JSON e filtrar por UF (se existir)
-        window.onload = function () {
-            const ufSelecionado = getUFfromURL();
+           window.onload = function () {
+               const ufSelecionado = getParameterFromURL('uf')?.toUpperCase();
+               const projetoSelecionado = getParameterFromURL('projeto');
+               const duplaSelecionada = getParameterFromURL('dupla')?.toUpperCase();
 
-            fetch('dados_1.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro ao carregar dados_1.json');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log(`Dados carregados: ${data.length} pontos no total.`);
+               fetch('dados_1.json')
+                   .then(response => {
+                       if (!response.ok) {
+                           throw new Error('Erro ao carregar dados_1.json');
+                       }
+                       return response.json();
+                   })
+                   .then(data => {
+                       console.log(`Dados carregados: ${data.length} pontos no total.`);
 
-                    let dadosFiltrados = data;
+                       let dadosFiltrados = data;
 
-                    if (ufSelecionado) {
-                        dadosFiltrados = data.filter(row => row.UF?.toUpperCase() === ufSelecionado);
-                        console.log(`Filtrando UF: ${ufSelecionado} (${dadosFiltrados.length} pontos)`);
-                    } else {
-                        console.log(`Sem UF definida na URL. Exibindo todos os ${data.length} pontos.`);
-                    }
+                       if (ufSelecionado) {
+                           dadosFiltrados = dadosFiltrados.filter(row => row.UF?.toUpperCase() === ufSelecionado);
+                           console.log(`Filtrando UF: ${ufSelecionado} (${dadosFiltrados.length} pontos)`);
+                       }
 
-                    addMarkers(dadosFiltrados, ufSelecionado);
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar os dados:', error);
-                    alert('Não foi possível carregar os dados. Verifique se o arquivo dados_1.json está no mesmo diretório que o index.html.');
-                });
-        };
-    </script>
-</body>
-</html>
+                       if (projetoSelecionado) {
+                           dadosFiltrados = dadosFiltrados.filter(row => row['Projeto'] === projetoSelecionado);
+                           console.log(`Filtrando Projeto: ${projetoSelecionado} (${dadosFiltrados.length} pontos)`);
+                       }
+
+                       if (duplaSelecionada) {
+                           dadosFiltrados = dadosFiltrados.filter(row => row['Dupla Abordagem (sim/não)']?.toUpperCase() === duplaSelecionada);
+                           console.log(`Filtrando Dupla Abordagem: ${duplaSelecionada} (${dadosFiltrados.length} pontos)`);
+                       }
+
+                       if (!ufSelecionado && !projetoSelecionado && !duplaSelecionada) {
+                           console.log(`Sem filtros definidos. Exibindo todos os ${data.length} pontos.`);
+                       }
+
+                       const hasFilter = ufSelecionado || projetoSelecionado || duplaSelecionada;
+                       addMarkers(dadosFiltrados, hasFilter);
+                   })
+                   .catch(error => {
+                       console.error('Erro ao carregar os dados:', error);
+                       alert('Não foi possível carregar os dados. Verifique se o arquivo dados_1.json está no mesmo diretório que o index.html.');
+                   });
+           };
+       </script>
+   </body>
+   </html>
