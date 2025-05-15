@@ -63,7 +63,7 @@
                    const lat = parseFloat(row.Latitude);
                    const lon = parseFloat(row.Longitude);
                    const uf = row.UF;
-                   const indice = row.Indice !== undefined ? row.Indice : 'N/A';
+                   const INDICE = row.INDICE !== undefined ? row.INDICE : 'N/A';
 
                    if (!isNaN(lat) && !isNaN(lon)) {
                        const marker = L.circleMarker([lat, lon], {
@@ -78,7 +78,7 @@
                        const popupContent = `
                            <table class="popup-table">
                                <tr><th>Estado</th><td>${uf}</td></tr>
-                               <tr><th>Índice</th><td>${indice}</td></tr>
+                               <tr><th>Índice</th><td>${INDICE}</td></tr>
                                <tr><th>Latitude</th><td>${lat.toFixed(6)}</td></tr>
                                <tr><th>Longitude</th><td>${lon.toFixed(6)}</td></tr>
                            </table>
